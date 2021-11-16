@@ -82,3 +82,27 @@ const loadEmployees = () => {
             questions();
     });
 };
+
+const addDept = () => {
+    inquirer
+        .prompt([
+            {
+                type: "input",
+                name: "name",
+                message: "What is the name of the new department?"
+            },
+        ])
+        .then((response) => {
+        const { name } = response;
+        db.query(
+            `INSERT INTO department (name) VALUES (?)`,
+            name,
+            (err, result) => {
+                if (err) throw err;
+                console.log("New department added!");
+                questions();
+            }
+        );
+    });
+};
+
