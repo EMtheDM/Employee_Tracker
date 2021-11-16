@@ -53,7 +53,7 @@ const questions = () => {
 
 const loadDepts = () => {
     db.query(
-        `SELECT * FROM department`, 
+        "SELECT * FROM department", 
         function (err, result) {
             console.table(result);
             questions();
@@ -144,3 +144,40 @@ const addRole = () => {
     });
   };
 
+  const addEmployee = () => {
+    db.query("SELECT * FROM roles", function (err, result) {
+      inquirer
+        .prompt([
+          {
+            type: "input",
+            name: "first",
+            message: "first name?",
+          },
+          {
+            type: "input",
+            name: "last",
+            message: "last name?",
+          },
+          {
+            type: "list",
+            name: "role",
+            message: "What is the employee's role?",
+            choices: result.map((item) => ({
+              name: item.title,
+              value: item.id,
+            })),
+          },
+        ])
+        .then((response) => {
+          const { first, last, role } = response;
+          db.query(
+            `INSERT INTO employee (first_name, last_name, role_id) VALUES (?, ?, ?)`,
+            [first, last, role],
+            questions(),
+            (err, result) => {
+              if (err) throw err;
+            }
+          );
+        });
+    });
+  };
