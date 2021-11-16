@@ -106,3 +106,41 @@ const addDept = () => {
     });
 };
 
+const addRole = () => {
+    db.query("SELECT * FROM department", function (err, result) {
+      inquirer
+        .prompt([
+          {
+            type: "input",
+            name: "title",
+            message: "What is the name of the new role?",
+          },
+          {
+            type: "input",
+            name: "salary",
+            message: "What is the salary of the new role?",
+          },
+          {
+            type: "list",
+            name: "dept",
+            message: "What department is the new role associated with?",
+            choices: result.map((item) => ({
+              name: item.name,
+              value: item.id,
+            })),
+          },
+        ])
+        .then((response) => {
+          const { title, salary, dept } = response;
+          db.query(
+            `INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)`,
+            [title, salary, dept],
+            (err, result) => {
+              if (err) throw err;
+              questions();
+            }
+          );
+        });
+    });
+  };
+
