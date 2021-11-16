@@ -52,8 +52,33 @@ const questions = () => {
 };
 
 const loadDepts = () => {
-    db.query("SELECT * FROM department", function (err, result) {
-        console.table(result);
-        questions();
+    db.query(
+        `SELECT * FROM department`, 
+        function (err, result) {
+            console.table(result);
+            questions();
+    });
+};
+
+const loadRoles = () => {
+    db.query(
+        `SELECT roles.id, roles.title, roles.salary, department.name 
+        FROM roles 
+        JOIN deparment on roles.department_id = department.id`,
+        function (err, result) {
+            console.table(result);
+            questions();
+    });
+};
+
+const loadEmployees = () => {
+    db.query(
+        `SELECT employee.first_name, employee.last_name, employee.manager_id, roles.title, roles.salary, department.name 
+        FROM employee
+        JOIN roles ON roles.id = employee.role_id
+        JOIN department ON department.id = roles.department_id`,
+        function (err, result) {
+            console.table(result);
+            questions();
     });
 };
