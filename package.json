@@ -8,7 +8,7 @@
     "sql": "mySQL -u root -p"
   },
   "keywords": [],
-  "author": "paw6063",
+  "author": "EMtheDM",
   "license": "MIT",
   "description": "A back-end app that keeps track of employees.",
   "dependencies": {
