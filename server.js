@@ -1,5 +1,13 @@
+const express = require("express");
+const mysql = require("mysql2");
 const inquirer = require("inquirer");
-const mysql2 = require("mysql2");
+const table = require("console.table");
+
+const PORT = process.env.PORT || 3001;
+const app = express();
+
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
 const db = mysql.createConnection({
     host: "localhost",
@@ -8,9 +16,14 @@ const db = mysql.createConnection({
     database: "employees_db"
 });
 
-db.connect((error) => {
-    if (error) throw error;
-    questions();
+db.connect(err => {
+  if (err) throw err;
+  console.log("Connected to employee database");
+  questions();
+})
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
 const questions = () => {
@@ -53,7 +66,7 @@ const questions = () => {
 
 const loadDepts = () => {
     db.query(
-        "SELECT * FROM department", 
+        "SELECT * FROM departments", 
         function (err, result) {
             console.table(result);
             questions();
@@ -62,9 +75,7 @@ const loadDepts = () => {
 
 const loadRoles = () => {
     db.query(
-        `SELECT roles.id, roles.title, roles.salary, department.name 
-        FROM roles 
-        JOIN deparment on roles.department_id = department.id`,
+        "SELECT * FROM roles",
         function (err, result) {
             console.table(result);
             questions();
@@ -73,10 +84,10 @@ const loadRoles = () => {
 
 const loadEmployees = () => {
     db.query(
-        `SELECT employee.first_name, employee.last_name, employee.manager_id, roles.title, roles.salary, department.name 
-        FROM employee
-        JOIN roles ON roles.id = employee.role_id
-        JOIN department ON department.id = roles.department_id`,
+        `SELECT employees.first_name, employees.last_name, employees.manager_id, roles.title, roles.salary, departments.name 
+        FROM employees
+        JOIN roles ON roles.id = employees.role_id
+        JOIN departments ON departments.id = roles.department_id`,
         function (err, result) {
             console.table(result);
             questions();
@@ -88,14 +99,14 @@ const addDept = () => {
         .prompt([
             {
                 type: "input",
-                name: "name",
+                name: "departments",
                 message: "What is the name of the new department?"
             },
         ])
         .then((response) => {
         const { name } = response;
         db.query(
-            `INSERT INTO department (name) VALUES (?)`,
+            `INSERT INTO departments (name) VALUES (?)`,
             name,
             (err, result) => {
                 if (err) throw err;
@@ -107,7 +118,6 @@ const addDept = () => {
 };
 
 const addRole = () => {
-    db.query("SELECT * FROM department", function (err, result) {
       inquirer
         .prompt([
           {
@@ -134,15 +144,14 @@ const addRole = () => {
           const { title, salary, dept } = response;
           db.query(
             `INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)`,
-            [title, salary, dept],
+            [response.title, response.salary, response.dept],
             (err, result) => {
               if (err) throw err;
               questions();
             }
           );
         });
-    });
-  };
+    }
 
   const addEmployee = () => {
     db.query("SELECT * FROM roles", function (err, result) {
@@ -171,7 +180,7 @@ const addRole = () => {
         .then((response) => {
           const { first, last, role } = response;
           db.query(
-            `INSERT INTO employee (first_name, last_name, role_id) VALUES (?, ?, ?)`,
+            `INSERT INTO employees (first_name, last_name, role_id) VALUES (?, ?, ?)`,
             [first, last, role],
             questions(),
             (err, result) => {
@@ -180,4 +189,25 @@ const addRole = () => {
           );
         });
     });
+  };
+
+  const updateEmployeeRole = () => {
+      inquirer
+      .prompt([
+          {
+              type: "input",
+              message: "Which employee would you like to update?",
+              name: "name"
+          }, {
+              type: "number",
+              message: "What is the employee's new role ID?",
+              name: "role_id"
+          }
+      ])
+      .then(function (response) {
+          db.query("UPDATE employees SET role_id = ? WHERE first_name = ?", [response.role_id, response.name], function (err, data) {
+              console.table(data);
+          })
+          questions();
+      });
   };
